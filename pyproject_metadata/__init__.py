@@ -219,6 +219,7 @@ class StandardMetadata:
     description: str | None = None
     license: License | str | None = None
     license_files: list[pathlib.Path] | None = None
+    sbom_files: list[pathlib.Path] | None = None
     readme: Readme | None = None
     requires_python: packaging.specifiers.SpecifierSet | None = None
     dependencies: list[Requirement] = dataclasses.field(default_factory=list)
@@ -262,7 +263,8 @@ class StandardMetadata:
         """
         if self.metadata_version is not None:
             return self.metadata_version
-
+        if self.sbom_files is not None:
+            return "2.5"
         if isinstance(self.license, str) or self.license_files is not None:
             return "2.4"
         if self.dynamic_metadata:
@@ -393,6 +395,7 @@ class StandardMetadata:
                 description=description,
                 license=pyproject.get_license(project, project_dir),
                 license_files=pyproject.get_license_files(project, project_dir),
+                sbom_files=pyproject.get_sbom_files(project, project_dir),
                 readme=pyproject.get_readme(project, project_dir),
                 requires_python=requires_python,
                 dependencies=pyproject.get_dependencies(project),
@@ -465,6 +468,7 @@ class StandardMetadata:
         - License classifiers deprecated for metadata_version >= 2.4 (warning)
         - ``license`` is an SPDX license expression if metadata_version >= 2.4
         - ``license_files`` is supported only for metadata_version >= 2.4
+        - ``sbom-files`` is supported only for metadata_version >= 2.5
         - ``project_url`` can't contain keys over 32 characters
         """
         errors = ErrorCollector(collect_errors=self.all_errors)
@@ -527,6 +531,13 @@ class StandardMetadata:
             msg = "{key} is supported only when emitting metadata version >= 2.4"
             errors.config_error(msg, key="project.license-files")
 
+        if (
+            self.sbom_files is not None
+            and self.auto_metadata_version in constants.PRE_SBOM_METADATA_VERSIONS
+        ):
+            msg = "{key} is supported only when emitting metadata version >= 2.5"
+            errors.config_error(msg, key="project.sbom-files")
+
         for name in self.urls:
             if len(name) > 32:
                 msg = "{key} names cannot be more than 32 characters long"
@@ -576,6 +587,10 @@ class StandardMetadata:
             and self.license.file
         ):
             smart_message["License-File"] = os.fspath(self.license.file.as_posix())
+
+        if self.sbom_files is not None:
+            for sbom_file in sorted(set(self.sbom_files)):
+                smart_message["Sbom-File"] = os.fspath(sbom_file.as_posix())
 
         for classifier in self.classifiers:
             smart_message["Classifier"] = classifier

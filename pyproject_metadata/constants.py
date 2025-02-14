@@ -15,6 +15,7 @@ __all__ = [
     "KNOWN_MULTIUSE",
     "KNOWN_PROJECT_FIELDS",
     "KNOWN_TOPLEVEL_FIELDS",
+    "PRE_SBOM_METADATA_VERSIONS",
     "PRE_SPDX_METADATA_VERSIONS",
     "PROJECT_TO_METADATA",
 ]
@@ -24,8 +25,9 @@ def __dir__() -> list[str]:
     return __all__
 
 
-KNOWN_METADATA_VERSIONS = {"2.1", "2.2", "2.3", "2.4"}
+KNOWN_METADATA_VERSIONS = {"2.1", "2.2", "2.3", "2.4", "2.5"}
 PRE_SPDX_METADATA_VERSIONS = {"2.1", "2.2", "2.3"}
+PRE_SBOM_METADATA_VERSIONS = {"2.1", "2.2", "2.3", "2.4"}
 
 PROJECT_TO_METADATA = {
     "authors": frozenset(["Author", "Author-Email"]),
@@ -38,6 +40,7 @@ PROJECT_TO_METADATA = {
     "keywords": frozenset(["Keywords"]),
     "license": frozenset(["License", "License-Expression"]),
     "license-files": frozenset(["License-File"]),
+    "sbom-files": frozenset(["Sbom-File"]),
     "maintainers": frozenset(["Maintainer", "Maintainer-Email"]),
     "name": frozenset(["Name"]),
     "optional-dependencies": frozenset(["Provides-Extra", "Requires-Dist"]),
@@ -65,6 +68,7 @@ KNOWN_METADATA_FIELDS = {
     "license",
     "license-expression",
     "license-file",
+    "sbom-file",
     "maintainer",
     "maintainer-email",
     "metadata-version",
@@ -91,6 +95,7 @@ KNOWN_MULTIUSE = {
     "provides-extra",
     "supported-platform",
     "license-file",
+    "sbom-file",
     "classifier",
     "requires-dist",
     "requires-external",

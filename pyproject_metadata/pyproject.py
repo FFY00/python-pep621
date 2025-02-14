@@ -216,7 +216,30 @@ class PyProjectReader(ErrorCollector):
         if self.ensure_list(license_files, "project.license-files") is None:
             return None
 
-        return list(self._get_files_from_globs(project_dir, license_files))
+        return list(
+            self._get_files_from_globs(
+                project_dir, license_files, "project.license-files"
+            )
+        )
+
+    def get_sbom_files(
+        self, project: ProjectTable, project_dir: pathlib.Path
+    ) -> list[pathlib.Path] | None:
+        """Get the sbom-files list of files from the project table.
+
+        Returns None if an error occurred (including invalid globs, etc) or if
+        not present.
+        """
+
+        sbom_files = project.get("sbom-files")
+        if sbom_files is None:
+            return None
+        if self.ensure_list(sbom_files, "project.sbom-files") is None:
+            return None
+
+        return list(
+            self._get_files_from_globs(project_dir, sbom_files, "project.sbom-files")
+        )
 
     def get_readme(  # noqa: C901
         self, project: ProjectTable, project_dir: pathlib.Path
@@ -432,19 +455,19 @@ class PyProjectReader(ErrorCollector):
         return dynamic
 
     def _get_files_from_globs(
-        self, project_dir: pathlib.Path, globs: Iterable[str]
+        self, project_dir: pathlib.Path, globs: Iterable[str], key: str
     ) -> Generator[pathlib.Path, None, None]:
         """Given a list of globs, get files that match."""
 
         for glob in globs:
             if glob.startswith(("..", "/")):
                 msg = "{glob!r} is an invalid {key} glob: the pattern must match files within the project directory"
-                self.config_error(msg, key="project.license-files", glob=glob)
+                self.config_error(msg, key=key, glob=glob)
                 break
             files = [f for f in project_dir.glob(glob) if f.is_file()]
             if not files:
                 msg = "Every pattern in {key} must match at least one file: {glob!r} did not match any"
-                self.config_error(msg, key="project.license-files", glob=glob)
+                self.config_error(msg, key=key, glob=glob)
                 break
             for f in files:
                 yield f.relative_to(project_dir)

@@ -1,0 +1,4 @@
+[project]
+name = "test-sbom"
+version = "0.1.0"
+sbom-files = ["bom.json", "sboms/*"]
