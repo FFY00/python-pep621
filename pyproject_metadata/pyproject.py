@@ -374,6 +374,36 @@ class PyProjectReader(ErrorCollector):
                     return {}
         return dict(requirements_dict)
 
+    def get_default_optional_dependency_keys(
+        self, project: ProjectTable
+    ) -> list[str] | None:
+        """Get the default extras, or None if none provided"""
+
+        default_extras = project.get("default-optional-dependency-keys")
+        if default_extras is None:
+            return None
+
+        default_extra_list = self.ensure_list(
+            default_extras, key="project.default-optional-dependency-keys"
+        )
+        if default_extra_list is None:
+            return None
+
+        missing_keys = {
+            extra.replace(".", "-").replace("_", "-").lower()
+            for extra in default_extra_list
+        } - {
+            extra.replace(".", "-").replace("_", "-").lower()
+            for extra in self.get_optional_dependencies(project)
+        }
+        if missing_keys:
+            msg = 'Field {key} contains keys not in "project.optional-dependencies": {values!r}'
+            self.config_error(
+                msg, key="project.default-optional-dependency-keys", values=missing_keys
+            )
+
+        return default_extra_list
+
     def get_entrypoints(self, project: ProjectTable) -> dict[str, dict[str, str]]:
         """Get the entrypoints from the project table."""
 

@@ -1,0 +1,14 @@
+[project]
+name = "default_extras"
+version = "0.1.2"
+default-optional-dependency-keys = [
+    "backend1",
+    "backend2",
+    "backend3"
+]
+
+[project.optional-dependencies]
+backend1 = ["a"]
+backend2 = ["b"]
+backend3 = ["c"]
+backend4 = ["d"]

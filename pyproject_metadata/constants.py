@@ -15,6 +15,7 @@ __all__ = [
     "KNOWN_MULTIUSE",
     "KNOWN_PROJECT_FIELDS",
     "KNOWN_TOPLEVEL_FIELDS",
+    "PRE_DEFAULT_EXTRAS_METADATA_VERSIONS",
     "PRE_SPDX_METADATA_VERSIONS",
     "PROJECT_TO_METADATA",
 ]
@@ -24,8 +25,9 @@ def __dir__() -> list[str]:
     return __all__
 
 
-KNOWN_METADATA_VERSIONS = {"2.1", "2.2", "2.3", "2.4"}
+KNOWN_METADATA_VERSIONS = {"2.1", "2.2", "2.3", "2.4", "2.5", "2.6"}
 PRE_SPDX_METADATA_VERSIONS = {"2.1", "2.2", "2.3"}
+PRE_DEFAULT_EXTRAS_METADATA_VERSIONS = {"2.1", "2.2", "2.3", "2.4", "2.5"}
 
 PROJECT_TO_METADATA = {
     "authors": frozenset(["Author", "Author-Email"]),
@@ -41,6 +43,7 @@ PROJECT_TO_METADATA = {
     "maintainers": frozenset(["Maintainer", "Maintainer-Email"]),
     "name": frozenset(["Name"]),
     "optional-dependencies": frozenset(["Provides-Extra", "Requires-Dist"]),
+    "default-optional-dependency-keys": frozenset(["Default-Extra"]),
     "readme": frozenset(["Description", "Description-Content-Type"]),
     "requires-python": frozenset(["Requires-Python"]),
     "scripts": frozenset(),
@@ -76,6 +79,7 @@ KNOWN_METADATA_FIELDS = {
     "provides",  # Deprecated
     "provides-dist",  # Rarely used
     "provides-extra",
+    "default-extra",
     "requires",  # Deprecated
     "requires-dist",
     "requires-external",  # Not specified via pyproject standards
@@ -89,6 +93,7 @@ KNOWN_MULTIUSE = {
     "dynamic",
     "platform",
     "provides-extra",
+    "default-extra",
     "supported-platform",
     "license-file",
     "classifier",

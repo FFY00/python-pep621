@@ -54,6 +54,7 @@ ReadmeTable = TypedDict(
 Dynamic = Literal[
     "authors",
     "classifiers",
+    "default-optional-dependency-keys",
     "dependencies",
     "description",
     "dynamic",
@@ -82,6 +83,7 @@ ProjectTable = TypedDict(
         "requires-python": str,
         "dependencies": List[str],
         "optional-dependencies": Dict[str, List[str]],
+        "default-optional-dependency-keys": List[str],
         "entry-points": Dict[str, Dict[str, str]],
         "authors": List[ContactTable],
         "maintainers": List[ContactTable],

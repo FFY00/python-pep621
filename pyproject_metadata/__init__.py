@@ -225,6 +225,7 @@ class StandardMetadata:
     optional_dependencies: dict[str, list[Requirement]] = dataclasses.field(
         default_factory=dict
     )
+    default_optional_dependency_keys: list[str] | None = None
     entrypoints: dict[str, dict[str, str]] = dataclasses.field(default_factory=dict)
     authors: list[tuple[str, str | None]] = dataclasses.field(default_factory=list)
     maintainers: list[tuple[str, str | None]] = dataclasses.field(default_factory=list)
@@ -263,6 +264,8 @@ class StandardMetadata:
         if self.metadata_version is not None:
             return self.metadata_version
 
+        if self.default_optional_dependency_keys is not None:
+            return "2.6"
         if isinstance(self.license, str) or self.license_files is not None:
             return "2.4"
         if self.dynamic_metadata:
@@ -397,6 +400,9 @@ class StandardMetadata:
                 requires_python=requires_python,
                 dependencies=pyproject.get_dependencies(project),
                 optional_dependencies=pyproject.get_optional_dependencies(project),
+                default_optional_dependency_keys=pyproject.get_default_optional_dependency_keys(
+                    project
+                ),
                 entrypoints=pyproject.get_entrypoints(project),
                 authors=pyproject.ensure_people(
                     project.get("authors", []), "project.authors"
@@ -527,6 +533,14 @@ class StandardMetadata:
             msg = "{key} is supported only when emitting metadata version >= 2.4"
             errors.config_error(msg, key="project.license-files")
 
+        if (
+            self.default_optional_dependency_keys is not None
+            and self.auto_metadata_version
+            in constants.PRE_DEFAULT_EXTRAS_METADATA_VERSIONS
+        ):
+            msg = "{key} is supported only when emitting metadata version >= 2.6"
+            errors.config_error(msg, key="project.default-optional-dependency-keys")
+
         for name in self.urls:
             if len(name) > 32:
                 msg = "{key} names cannot be more than 32 characters long"
@@ -595,6 +609,9 @@ class StandardMetadata:
                 smart_message["Requires-Dist"] = str(
                     _build_extra_req(norm_extra, requirement)
                 )
+        for default_extra in self.default_optional_dependency_keys or []:
+            norm_extra = default_extra.replace(".", "-").replace("_", "-").lower()
+            smart_message["Default-Extra"] = norm_extra
         if self.readme:
             if self.readme.content_type:
                 smart_message["Description-Content-Type"] = self.readme.content_type

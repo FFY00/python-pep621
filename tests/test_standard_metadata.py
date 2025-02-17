@@ -425,6 +425,66 @@ def all_errors(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) 
                 [project]
                 name = "test"
                 version = "0.1.0"
+                default-optional-dependency-keys = ["none"]
+                [project.optional-dependencies]
+                test = [
+                    "a",
+                ]
+            """,
+            (
+                'Field "project.default-optional-dependency-keys" contains keys '
+                "not in \"project.optional-dependencies\": {'none'}"
+            ),
+            id="Invalid default-optional-dependency-keys item",
+        ),
+        pytest.param(
+            """
+                [project]
+                name = "test"
+                version = "0.1.0"
+                default-optional-dependency-keys = ["none"]
+            """,
+            (
+                'Field "project.default-optional-dependency-keys" contains keys '
+                "not in \"project.optional-dependencies\": {'none'}"
+            ),
+            id="Invalid default-optional-dependency-keys item without optional-dependencies",
+        ),
+        pytest.param(
+            """
+                [project]
+                name = "test"
+                version = "0.1.0"
+                default-optional-dependency-keys = [1]
+            """,
+            (
+                'Field "project.default-optional-dependency-keys" contains item with invalid '
+                "type, expecting a string (got int)"
+            ),
+            id="Invalid default-optional-dependency-keys item type",
+        ),
+        pytest.param(
+            """
+                [project]
+                name = "test"
+                version = "0.1.0"
+                default-optional-dependency-keys = "test"
+                [project.optional-dependencies]
+                test = [
+                    "a",
+                ]
+            """,
+            (
+                'Field "project.default-optional-dependency-keys" has an invalid type, '
+                "expecting a list of strings (got str)"
+            ),
+            id="Invalid default-optional-dependency-keys not list",
+        ),
+        pytest.param(
+            """
+                [project]
+                name = "test"
+                version = "0.1.0"
                 requires-python = true
             """,
             'Field "project.requires-python" has an invalid type, expecting a string (got bool)',
@@ -943,6 +1003,17 @@ def test_load_multierror(
             "2.3",
             id="license-files with metadata_version 2.3",
         ),
+        pytest.param(
+            """
+                [project]
+                name = "test"
+                version = "0.1.0"
+                default-optional-dependency-keys = []
+            """,
+            '"project.default-optional-dependency-keys" is supported only when emitting metadata version >= 2.6',
+            "2.5",
+            id=" with metadata_version 2.5",
+        ),
     ],
 )
 def test_load_with_metadata_version(
@@ -1181,6 +1252,53 @@ def test_as_rfc822(monkeypatch: pytest.MonkeyPatch) -> None:
         ("Description-Content-Type", "text/markdown"),
     ]
     assert core_metadata.get_payload() == "some readme 👋\n"
+
+
+def test_as_json_default_extra(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(DIR / "packages/default_extra")
+
+    with open("pyproject.toml", "rb") as f:
+        metadata = pyproject_metadata.StandardMetadata.from_pyproject(tomllib.load(f))
+    core_metadata = metadata.as_json()
+    assert core_metadata == {
+        "metadata_version": "2.6",
+        "name": "default_extras",
+        "version": "0.1.2",
+        "default_extra": ["backend1", "backend2", "backend3"],
+        "provides_extra": ["backend1", "backend2", "backend3", "backend4"],
+        "requires_dist": [
+            'a; extra == "backend1"',
+            'b; extra == "backend2"',
+            'c; extra == "backend3"',
+            'd; extra == "backend4"',
+        ],
+    }
+
+
+def test_as_rfc822_default_extra(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(DIR / "packages/default_extra")
+
+    with open("pyproject.toml", "rb") as f:
+        metadata = pyproject_metadata.StandardMetadata.from_pyproject(tomllib.load(f))
+    core_metadata = metadata.as_rfc822()
+    assert core_metadata.items() == [
+        ("Metadata-Version", "2.6"),
+        ("Name", "default_extras"),
+        ("Version", "0.1.2"),
+        ("Provides-Extra", "backend1"),
+        ("Requires-Dist", 'a; extra == "backend1"'),
+        ("Provides-Extra", "backend2"),
+        ("Requires-Dist", 'b; extra == "backend2"'),
+        ("Provides-Extra", "backend3"),
+        ("Requires-Dist", 'c; extra == "backend3"'),
+        ("Provides-Extra", "backend4"),
+        ("Requires-Dist", 'd; extra == "backend4"'),
+        ("Default-Extra", "backend1"),
+        ("Default-Extra", "backend2"),
+        ("Default-Extra", "backend3"),
+    ]
+
+    assert core_metadata.get_payload() is None
 
 
 def test_as_json_spdx(monkeypatch: pytest.MonkeyPatch) -> None:
